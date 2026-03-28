@@ -1,0 +1,73 @@
+# Agent Configuration Domains
+
+version: "1.0"
+
+domains:
+  - id: devops-engineer
+    name: DevOps Engineer
+    description: Infrastructure, CI/CD, deployment, and operational configurations
+    version: 1.0.0
+    categories:
+      - infrastructure
+      - deployment
+      - operations
+    
+  - id: python-backend-engineer
+    name: Python Backend Engineer
+    description: Python backend development, API design, and service architecture
+    version: 1.0.0
+    categories:
+      - backend
+      - python
+      - api
+    
+  - id: js-ts-software-engineer
+    name: JavaScript/TypeScript Software Engineer
+    description: JavaScript/TypeScript development for frontend and backend
+    version: 1.0.0
+    categories:
+      - frontend
+      - backend
+      - javascript
+      - typescript
+    
+  - id: data-engineer
+    name: Data Engineer
+    description: Data pipelines, ETL, data quality, and data infrastructure
+    version: 1.0.0
+    categories:
+      - data
+      - pipelines
+      - analytics
+    
+  - id: machine-learning-engineer
+    name: Machine Learning Engineer
+    description: ML model development, training, deployment, and monitoring
+    version: 1.0.0
+    categories:
+      - machine-learning
+      - ai
+      - mlops
+
+# Domain aliases for CLI convenience
+aliases:
+  devops: devops-engineer
+  ops: devops-engineer
+  python: python-backend-engineer
+  py: python-backend-engineer
+  python-backend: python-backend-engineer
+  jsts: js-ts-software-engineer
+  js: js-ts-software-engineer
+  ts: js-ts-software-engineer
+  javascript: js-ts-software-engineer
+  typescript: js-ts-software-engineer
+  data: data-engineer
+  de: data-engineer
+  mleng: machine-learning-engineer
+  ml: machine-learning-engineer
+  machine-learning: machine-learning-engineer
+
+metadata:
+  repository: https://github.com/Harvey-N-Lab/hailow
+  documentation: https://github.com/Harvey-N-Lab/hailow/blob/main/README.md
+  license: MIT

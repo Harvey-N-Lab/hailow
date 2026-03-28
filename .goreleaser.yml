@@ -1,0 +1,78 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: hailow
+    main: ./cmd/hailow
+    binary: hailow
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: hailow
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - README.md
+      - INSTALL.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: Harvey-N-Lab
+    name: hailow
+  draft: false
+  prerelease: auto
+  name_template: "{{.ProjectName}} v{{.Version}}"
+  header: |
+    ## Hailow v{{.Version}}
+    
+    Install or upgrade:
+    ```bash
+    curl -sSL https://raw.githubusercontent.com/Harvey-N-Lab/hailow/main/scripts/install.sh | bash
+    ```
+  footer: |
+    ## Verification
+    
+    Verify downloads using `checksums.txt`:
+    ```bash
+    sha256sum -c checksums.txt --ignore-missing
+    ```
+    
+    ## Documentation
+    
+    See [INSTALL.md](https://github.com/Harvey-N-Lab/hailow/blob/main/INSTALL.md) for installation instructions.
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"

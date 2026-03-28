@@ -1,0 +1,13 @@
+# Contexts Directory
+
+This directory is for workspace-specific context files.
+
+Users can add project-specific information here:
+- Architecture documentation
+- Deployment procedures
+- System diagrams
+- Runbooks
+- Team conventions
+- Environment configurations
+
+Files placed here will be available to AI assistants to better understand your specific project context.
