@@ -4,7 +4,7 @@ set -e
 # Hailow - AI Agent Configuration Manager Installation Script
 # This script installs the hailow CLI tool
 
-REPO="username/hailow"
+REPO="Harvey-N-Lab/hailow"
 BINARY_NAME="hailow"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 
