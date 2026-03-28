@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Harvey-N-Lab/hailow/internal/fetcher"
 	"github.com/Harvey-N-Lab/hailow/internal/installer"
 	"github.com/spf13/cobra"
 )
@@ -130,9 +131,10 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	}
 
 	// Determine source path
+	// Default to GitHub repository
+	const defaultSource = "https://github.com/Harvey-N-Lab/hailow"
 	if source == "" {
-		// Default to current directory (assuming we're in the hailow repo)
-		source, _ = os.Getwd()
+		source = defaultSource
 	}
 
 	fmt.Printf("Installing domains to workspace: %s\n", workspace)
@@ -152,10 +154,19 @@ func runInstall(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// Fetch source
+	fmt.Println("\nFetching source...")
+	f := fetcher.GetFetcher(source)
+	sourcePath, cleanup, err := f.Fetch()
+	if err != nil {
+		return fmt.Errorf("failed to fetch source: %w", err)
+	}
+	defer cleanup()
+
 	// Perform actual installation
 	platform := installer.Platform(platformStr)
 	inst := &installer.Installer{
-		SourcePath:     source,
+		SourcePath:     sourcePath,
 		WorkspacePath:  workspace,
 		Platform:       platform,
 		Force:          force,
