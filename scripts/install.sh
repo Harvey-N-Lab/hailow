@@ -81,7 +81,10 @@ get_latest_version() {
 
 # Download binary
 download_binary() {
-    local filename="${BINARY_NAME}_${OS}_${ARCH}"
+    # GoReleaser format: hailow_VERSION_OS_ARCH.tar.gz
+    # Strip 'v' from version for filename
+    local version_num="${LATEST_VERSION#v}"
+    local filename="${BINARY_NAME}_${version_num}_${OS}_${ARCH}"
     
     if [ "$OS" = "windows" ]; then
         filename="${filename}.zip"
@@ -97,6 +100,8 @@ download_binary() {
     if ! curl -f -L -o "$TMPDIR/$filename" "$url" 2>/dev/null; then
         echo_error "Failed to download binary"
         echo_error "URL: $url"
+        echo_error "Release may not exist yet. Build from source:"
+        echo_error "  git clone https://github.com/$REPO && cd hailow && make build"
         rm -rf "$TMPDIR"
         exit 1
     fi
