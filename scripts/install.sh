@@ -70,6 +70,9 @@ get_latest_version() {
     
     if [ -z "$LATEST_VERSION" ]; then
         echo_error "Failed to fetch latest version"
+        echo_error "No releases found. Please build from source:"
+        echo_error "  git clone https://github.com/$REPO"
+        echo_error "  cd hailow && make build"
         exit 1
     fi
     
@@ -87,32 +90,28 @@ download_binary() {
     fi
     
     local url="https://github.com/$REPO/releases/download/$LATEST_VERSION/$filename"
-    local tmpdir=$(mktemp -d)
+    TMPDIR=$(mktemp -d)
     
     echo_info "Downloading from $url..."
     
-    if ! curl -L -o "$tmpdir/$filename" "$url"; then
+    if ! curl -f -L -o "$TMPDIR/$filename" "$url" 2>/dev/null; then
         echo_error "Failed to download binary"
-        rm -rf "$tmpdir"
+        echo_error "URL: $url"
+        rm -rf "$TMPDIR"
         exit 1
     fi
     
     echo_info "Extracting..."
-    cd "$tmpdir"
     
     if [ "$OS" = "windows" ]; then
-        unzip -q "$filename"
+        unzip -q "$TMPDIR/$filename" -d "$TMPDIR"
     else
-        tar -xzf "$filename"
+        tar -xzf "$TMPDIR/$filename" -C "$TMPDIR"
     fi
-    
-    echo "$tmpdir"
 }
 
 # Install binary
 install_binary() {
-    local tmpdir=$1
-    
     # Create install directory if it doesn't exist
     mkdir -p "$INSTALL_DIR"
     
@@ -120,23 +119,23 @@ install_binary() {
     echo_info "Installing to $INSTALL_DIR/$BINARY_NAME..."
     
     if [ "$OS" = "windows" ]; then
-        cp "$tmpdir/${BINARY_NAME}.exe" "$INSTALL_DIR/"
+        cp "$TMPDIR/${BINARY_NAME}.exe" "$INSTALL_DIR/"
         chmod +x "$INSTALL_DIR/${BINARY_NAME}.exe"
     else
-        cp "$tmpdir/$BINARY_NAME" "$INSTALL_DIR/"
+        cp "$TMPDIR/$BINARY_NAME" "$INSTALL_DIR/"
         chmod +x "$INSTALL_DIR/$BINARY_NAME"
     fi
     
     # Cleanup
-    rm -rf "$tmpdir"
+    rm -rf "$TMPDIR"
 }
 
 # Verify installation
 verify_installation() {
     if command -v $BINARY_NAME &> /dev/null; then
-        local version=$($BINARY_NAME version --short 2>/dev/null || echo "unknown")
+        local version=$($BINARY_NAME version 2>/dev/null | head -n1 || echo "unknown")
         echo_info "Installation successful!"
-        echo_info "Installed version: $version"
+        echo_info "Version: $version"
         return 0
     else
         echo_warn "Binary installed but not in PATH"
@@ -151,14 +150,14 @@ verify_installation() {
 # Main installation
 main() {
     echo "Hailow - AI Agent Configuration Manager - Installation Script"
-    echo "=================================================="
+    echo "=============================================================="
     echo ""
     
     detect_platform
     get_latest_version
     
-    local tmpdir=$(download_binary)
-    install_binary "$tmpdir"
+    download_binary
+    install_binary
     
     echo ""
     verify_installation
@@ -166,7 +165,7 @@ main() {
     echo ""
     echo "Next steps:"
     echo "  1. Run: $BINARY_NAME list domains"
-    echo "  2. Install a domain: $BINARY_NAME install devops-engineer"
+    echo "  2. Install a domain: $BINARY_NAME install devops-engineer ./my-project"
     echo "  3. Read the docs: https://github.com/$REPO"
     echo ""
 }

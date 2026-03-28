@@ -60,7 +60,7 @@ release:
     
     Install or upgrade:
     ```bash
-    curl -sSL https://raw.githubusercontent.com/Harvey-N-Lab/hailow/main/scripts/install.sh | bash
+    curl -sSL https://raw.githubusercontent.com/Harvey-N-Lab/hailow/master/scripts/install.sh | bash
     ```
   footer: |
     ## Verification
@@ -72,7 +72,7 @@ release:
     
     ## Documentation
     
-    See [INSTALL.md](https://github.com/Harvey-N-Lab/hailow/blob/main/INSTALL.md) for installation instructions.
+    See [INSTALL.md](https://github.com/Harvey-N-Lab/hailow/blob/master/INSTALL.md) for installation instructions.
 
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
