@@ -5,9 +5,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Harvey-N-Lab/hailow/internal/config"
 	"github.com/Harvey-N-Lab/hailow/internal/fetcher"
 	"github.com/Harvey-N-Lab/hailow/internal/installer"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -77,6 +79,8 @@ Examples:
 }
 
 func runInstall(cmd *cobra.Command, args []string) error {
+	currentCfg := config.CurrentConfig()
+
 	platformStr, _ := cmd.Flags().GetString("platform")
 	workspaceFlag, _ := cmd.Flags().GetString("workspace")
 	source, _ := cmd.Flags().GetString("source")
@@ -84,6 +88,13 @@ func runInstall(cmd *cobra.Command, args []string) error {
 	dryRun, _ := cmd.Flags().GetBool("dry-run")
 	force, _ := cmd.Flags().GetBool("force")
 	noGeneral, _ := cmd.Flags().GetBool("no-general")
+
+	if platformStr == "" {
+		platformStr = currentCfg.Platform
+	}
+	if source == "" {
+		source = currentCfg.Source.URL
+	}
 
 	// Parse arguments: domains and optional directory path
 	var domains []string
@@ -346,25 +357,31 @@ func configCmd() *cobra.Command {
 	cmd.AddCommand(&cobra.Command{
 		Use:   "show",
 		Short: "Show current configuration",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("Configuration:")
-			fmt.Println("  platform: roo")
-			fmt.Println("  source: https://github.com/Harvey-N-Lab/hailow")
-			return nil
-		},
+		RunE:  runShowConfigCmd,
 	})
 
 	cmd.AddCommand(&cobra.Command{
 		Use:   "set <key> <value>",
 		Short: "Set configuration value",
 		Args:  cobra.ExactArgs(2),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Printf("Setting %s = %s\n", args[0], args[1])
-			return nil
-		},
+		RunE:  runSetConfigCmd,
 	})
 
 	return cmd
+}
+
+func runShowConfigCmd(cmd *cobra.Command, args []string) error {
+	fmt.Println("Configuration: ")
+	out, _ := yaml.Marshal(config.CurrentConfig())
+	fmt.Printf("%s", out)
+
+	return nil
+}
+
+func runSetConfigCmd(cmd *cobra.Command, args []string) error {
+	fmt.Printf("Setting %s = %s\n", args[0], args[1])
+	config.SetConfig(args[0], args[1])
+	return nil
 }
 
 func versionCmd() *cobra.Command {
