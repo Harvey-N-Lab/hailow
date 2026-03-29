@@ -182,10 +182,11 @@ func runInstall(cmd *cobra.Command, args []string) error {
 
 	// Show what was created
 	mapping := installer.GetPlatformMapping(platform)
+	home, err := os.UserHomeDir()
 	fmt.Println("\nInstalled:")
 	fmt.Printf("  - %s/ (agent configurations)\n", mapping.RootDir)
 	fmt.Printf("  - %s (workflow guidance)\n", mapping.RootGuidance)
-	fmt.Println("  - .hailow/manifest.txt (installation manifest)")
+	fmt.Printf("  - %s/.hailow/manifest.txt (installation manifest)", home)
 
 	return nil
 }

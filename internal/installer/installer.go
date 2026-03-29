@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 // Installer handles domain installation
@@ -65,8 +67,8 @@ func (i *Installer) Install(domains []string) error {
 		return fmt.Errorf("failed to copy root guidance: %w", err)
 	}
 
-	// Create manifest
-	if err := i.createManifest(domains); err != nil {
+	// Add to manifest file
+	if err := i.addToManifest(domains); err != nil {
 		return fmt.Errorf("failed to create manifest: %w", err)
 	}
 
@@ -238,32 +240,77 @@ func (i *Installer) copyRootGuidance(mapping PlatformMapping) error {
 	return i.copyFile(src, dst)
 }
 
-func (i *Installer) createManifest(domains []string) error {
-	manifestDir := filepath.Join(i.WorkspacePath, ".hailow")
-	if err := os.MkdirAll(manifestDir, 0755); err != nil {
-		return err
+func (i *Installer) addToManifest(domains []string) error {
+	home, err := os.UserHomeDir()
+	manifestDir := filepath.Join(home, "/.hailow")
+	if _, err := os.Stat(manifestDir); err != nil {
+		// Create manifest folder if not exist
+		if err := os.MkdirAll(manifestDir, 0755); err != nil {
+			return err
+		}
 	}
 
-	manifest := NewManifest(string(i.Platform))
-	manifest.InstalledAt = time.Now()
-	manifest.Source = SourceInfo{
+	newManifest := NewManifest(string(i.Platform))
+	newManifest.InstalledAt = time.Now()
+	newManifest.Source = SourceInfo{
 		Type: "local",
 		Path: i.SourcePath,
 	}
 
 	for _, domain := range domains {
-		manifest.AddDomain(DomainInstall{
+		newManifest.AddDomain(DomainInstall{
 			Name:    domain,
 			Version: "1.0.0",
 			Files:   []string{}, // Would be populated with actual file list
 		})
 	}
 
-	// Write manifest (simplified - would use YAML in real implementation)
-	manifestPath := filepath.Join(manifestDir, "manifest.txt")
-	content := fmt.Sprintf("Platform: %s\n", manifest.Platform)
-	content += fmt.Sprintf("Installed: %s\n", manifest.InstalledAt.Format(time.RFC3339))
-	content += fmt.Sprintf("Domains: %v\n", domains)
+	var manifest []map[string]Manifest
 
-	return os.WriteFile(manifestPath, []byte(content), 0644)
+	manifestPath := filepath.Join(manifestDir, "manifest.txt")
+
+	// Read file (handle file not exist)
+	data, err := os.ReadFile(manifestPath)
+	if err == nil {
+		_ = yaml.Unmarshal(data, &manifest)
+	}
+
+	found := false
+	for index, entry := range manifest {
+		for workspace, content := range entry {
+			if workspace == i.WorkspacePath {
+				content.Platform = newManifest.Platform
+				content.InstalledAt = newManifest.InstalledAt
+				for _, existDomains := range content.Domains {
+					newManifest.AddDomain(existDomains)
+				}
+				content.Domains = newManifest.Domains
+			}
+
+			manifest[index][workspace] = content
+			found = true
+			break
+		}
+
+		if found {
+			break
+		}
+	}
+
+	if !found {
+		manifest = append(manifest, map[string]Manifest{
+			i.WorkspacePath: {
+				Platform:    newManifest.Platform,
+				InstalledAt: newManifest.InstalledAt,
+				Domains:     newManifest.Domains,
+			},
+		})
+	}
+
+	out, err := yaml.Marshal(manifest)
+	if err != nil {
+		panic(err)
+	}
+
+	return os.WriteFile(manifestPath, out, 0644)
 }
